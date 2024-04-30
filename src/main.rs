@@ -1,93 +1,37 @@
-use rand::Rng;
-
-fn activation(val: f32) -> f32 {
-    //val.max(0.0)
-    val.clamp(0.0, 1.0)
-}
-
-
-
-/*
-1 input node
-1 output node
-activation fn: s(x)
-
-real truth: r
-evaluated truth: k
-cost => c = (r - k)^2
-c' = 2(r - k)
-
-
-n inputs
-n outputs
-
-*/
-
-struct Data<'a> {
-    inputs: &'a [f32],
-    outputs: &'a [f32],
-}
-
-#[derive(Default, Clone)]
-struct Neuron {
-    // for dense layers this should be equal to the number of neurons of the last layer
-    weights: Vec<f32>,
-    bias: f32,
-}
-
-struct Layer(Vec<Neuron>);
-struct Network(Vec<Layer>);
-impl Network {
-    fn input(neurons: usize) -> Self {
-        let layer = Layer(vec![Neuron::default(); neurons]);
-        Self(vec![layer])
-    }
-
-    fn dense(mut self, neurons: usize) -> Self {
-        self
-    }
-
-    fn output(mut self, neurons: usize) -> Self {
-        self
-    }
-
-    fn eval(&self, data: &Data) -> Vec<f32> {
-        let mut last_layer_activations = data.inputs.to_vec();
-        let mut temp_next = Vec::<f32>::new();
-        
-        for layer in self.0.iter() {
-            for neuron in layer.0.iter() {
-                
-            }
-        }
-
-        last_layer_activations
-    }
-}
+use std::{io::Cursor, path::Path};
+use image::io::Reader as ImageReader;
+mod network;
+pub use network::*;
 
 fn main() {
+    
     let mut rng = rand::thread_rng();
     let mut datas = Vec::<Data>::new();
-    datas.push(Data {
-        inputs: &[0.0, 1.0],
-        outputs: &[1.0],
-    });
-
-    datas.push(Data {
-        inputs: &[1.0, 0.0],
-        outputs: &[1.0],
-    });
-
-    datas.push(Data {
-        inputs: &[0.0, 0.0],
-        outputs: &[0.0],
-    });
     
-    let nn = Network::input(2)
-        .dense(12)
-        .output(1);
-    let output = nn.eval(&datas[0]);
-    dbg!(output);
+    for k in 0..4 {
+        let color = ["blue", "green", "red", "yellow"][k];
+        for i in 1..105 {
+            let img = ImageReader::open(format!("./src/images/{color}{i}.jpg")).unwrap().decode().unwrap();
+            let img = img.resize_exact(8, 8, image::imageops::FilterType::Gaussian);
+            let img = img.into_rgb32f();
+            let input = img.to_vec();
+            dbg!(input.len());
+            let mut output = vec![0.0f32; 4];
+            output[k] = 1.0;
+
+            datas.push(Data {
+                inputs: input,
+                outputs: output,
+            });
+        }
+    }
+
+    let mut nn = Network::input(8*8*3)
+        .dense(32)
+        .output(4);
+
+    nn.find_lowest_cost_nn(&datas, 10000, 10, 0.02, &mut rng);
+    nn.test_all(&datas);
 
     /*
 
