@@ -5,32 +5,91 @@ fn activation(val: f32) -> f32 {
     val.clamp(0.0, 1.0)
 }
 
+
+
+/*
+1 input node
+1 output node
+activation fn: s(x)
+
+real truth: r
+evaluated truth: k
+cost => c = (r - k)^2
+c' = 2(r - k)
+
+
+n inputs
+n outputs
+
+*/
+
+struct Data<'a> {
+    inputs: &'a [f32],
+    outputs: &'a [f32],
+}
+
+#[derive(Default, Clone)]
+struct Neuron {
+    // for dense layers this should be equal to the number of neurons of the last layer
+    weights: Vec<f32>,
+    bias: f32,
+}
+
+struct Layer(Vec<Neuron>);
+struct Network(Vec<Layer>);
+impl Network {
+    fn input(neurons: usize) -> Self {
+        let layer = Layer(vec![Neuron::default(); neurons]);
+        Self(vec![layer])
+    }
+
+    fn dense(mut self, neurons: usize) -> Self {
+        self
+    }
+
+    fn output(mut self, neurons: usize) -> Self {
+        self
+    }
+
+    fn eval(&self, data: &Data) -> Vec<f32> {
+        let mut last_layer_activations = data.inputs.to_vec();
+        let mut temp_next = Vec::<f32>::new();
+        
+        for layer in self.0.iter() {
+            for neuron in layer.0.iter() {
+                
+            }
+        }
+
+        last_layer_activations
+    }
+}
+
 fn main() {
     let mut rng = rand::thread_rng();
-    let mut inputs = Vec::<f32>::new();
-    inputs.push(0.0);
-    inputs.push(0.0);
-    inputs.push(0.0);
+    let mut datas = Vec::<Data>::new();
+    datas.push(Data {
+        inputs: &[0.0, 1.0],
+        outputs: &[1.0],
+    });
 
-    inputs.push(0.0);
-    inputs.push(1.0);
-    inputs.push(0.0);
-    
-    inputs.push(1.0);
-    inputs.push(0.0);
-    inputs.push(0.0);
+    datas.push(Data {
+        inputs: &[1.0, 0.0],
+        outputs: &[1.0],
+    });
 
-    inputs.push(1.0);
-    inputs.push(1.0);
-    inputs.push(1.0);
+    datas.push(Data {
+        inputs: &[0.0, 0.0],
+        outputs: &[0.0],
+    });
     
-    let mut outputs = Vec::<f32>::new();
+    let nn = Network::input(2)
+        .dense(12)
+        .output(1);
+    let output = nn.eval(&datas[0]);
+    dbg!(output);
 
-    outputs.push(0.0);
-    outputs.push(0.0);
-    outputs.push(0.0);
-    outputs.push(1.0);
-    
+    /*
 
     // how many input -> output lines
     let data_count = 4;
@@ -69,5 +128,6 @@ fn main() {
             }
         }
     }
+    */
     
 }
