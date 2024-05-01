@@ -15,15 +15,15 @@ pub struct Data {
 #[derive(Default, Clone)]
 pub struct Neuron {
     // for dense layers this should be equal to the number of neurons of the last layer
-    weights: Vec<f32>,
+    pub weights: Vec<f32>,
     bias: f32,
 }
 
 #[derive(Clone)]
-pub struct Layer(Vec<Neuron>);
+pub struct Layer(pub Vec<Neuron>);
 
 #[derive(Clone)]
-pub struct Network(Vec<Layer>, usize, usize);
+pub struct Network(pub Vec<Layer>, usize, usize);
 impl Network {
     pub fn input(neurons: usize) -> Self {
         Self(Vec::new(), neurons, 0)
@@ -80,6 +80,7 @@ impl Network {
     pub fn eval(&self, data: &Data) -> Vec<f32> {
         let mut last_layer_activations = data.inputs.to_vec();
         assert_eq!(last_layer_activations.len(), data.inputs.len());
+        let mut rng = rand::thread_rng();
         
         for (i, layer) in self.0.iter().enumerate() {
             let temp_next = layer.0.par_iter().map(|neuron| {
@@ -87,6 +88,7 @@ impl Network {
             });
 
             let temp_next = temp_next.map(activation).collect::<Vec<_>>();
+            //let temp_next = temp_next.into_iter().map(|x | x + rng.gen_range(-0.01f32..0.01f32)).collect::<Vec<_>>();
             last_layer_activations = temp_next;
         }
 
@@ -101,7 +103,7 @@ impl Network {
     }
 
     pub fn cost_all(&self, datas: &[Data]) -> f32 {
-        let datas = &datas[0..20];
+        let datas = &datas[0..70];
         return datas.par_iter().map(|x| self.cost(x)).sum::<f32>() / (datas.len() as f32);
     }
 
@@ -124,7 +126,7 @@ impl Network {
                 let mut nn = self.clone();
                 //let a = saved.iter().zip(delta.iter()).map(|(a, b)| *a + b * -0.2).collect::<Vec<_>>();
                 nn.load(saved.clone());
-                nn.randomize(&mut rng, randomized * (diff + 0.1));
+                nn.randomize(&mut rng, randomized * (diff + 0.5f32));
                 
                 let score = nn.cost_all(&datas);
                 //println!("Score: {score}");
